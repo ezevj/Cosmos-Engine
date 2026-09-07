@@ -208,7 +208,7 @@
         input[type="range"] {
             -webkit-appearance: none;
             width: 100%;
-            height: 8px;
+            height: 12px;
             background: #050515;
             border: 1px solid #3b3be3;
             border-radius: 5px;
@@ -217,8 +217,8 @@
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             background: #ff00ff;
             cursor: pointer;
@@ -353,6 +353,10 @@
                 font-size: 0.95rem;
             }
 
+            .game-canvas {
+                max-height: 42vh; /* Limita la altura del canvas para que no empuje el resto de los elementos en pantallas chicas */
+            }
+
             .simulator-grid {
                 grid-template-columns: 1fr;
                 gap: 10px;
@@ -392,8 +396,8 @@
             }
 
             #timeline-mini-canvas {
-                width: 180px;
-                height: 110px;
+                width: 220px;
+                height: 130px;
             }
         }
     </style>
@@ -438,7 +442,7 @@
     <!-- FASE 3: ERA DEL DESACOPLE DE LA LUZ -->
     <div id="stage3-screen" class="screen">
         <h2>La Recombinación Cósmica</h2>
-        <p class="instruction">Arrastrá los Electrones libres (<span style="color:#00ffff; font-weight:bold;">e⁻</span>) hacia los núcleos de Protones (<span style="color:#ff4dfa; font-weight:bold;">p⁺</span>) para formar átomos estables de Hidrógeno (<span style="color:#ffcc00; font-weight:bold;">¹H</span>).</p>
+        <p class="instruction">Arrastrá los Electrones libres (<span style="color:#00ffff; font-weight:bold;">e⁻</span>) hacia los núcleos de Protones (<span style="color:#ff4dfa; font-weight:bold;">p⁺</span>) para formar átomos de Hidrógeno (<span style="color:#ffcc00; font-weight:bold;">¹H</span>).</p>
         <canvas id="desacople-canvas" class="game-canvas" width="800" height="350"></canvas>
         <div class="metrics-bar">
             <div class="metric" id="desacople-metric">Átomos de ¹H formados: 0 / 6</div>
@@ -517,7 +521,7 @@
                 <h4 id="timeline-title">Fase 1: El Big Bang y la Era de Planck</h4>
                 <p id="timeline-desc">Toda la materia y la energía comenzaron concentradas en un punto de densidad matemática y temperatura infinitas que comenzó a expandirse exponencialmente.</p>
             </div>
-            <canvas id="timeline-mini-canvas" width="220" height="130"></canvas>
+            <canvas id="timeline-mini-canvas" width="300" height="180"></canvas>
         </div>
 
         <button class="btn-cosmic" style="margin-top: 15px;" onclick="resetGame()">Crear Otro Cosmos</button>
@@ -581,10 +585,11 @@
         }
     }
 
-    // --- ADAPTACIÓN DE COORDENADAS TÁCTILES Y MOUSE PARA SCALING ---
+    // --- CORRECCIÓN DEFINITIVA DE COORDENADAS TÁCTILES CON MULTITOUCH INDEXADO ---
     function getMousePos(canvas, evt) {
         const rect = canvas.getBoundingClientRect();
-        let clientX, clientY;
+        let clientX = 0;
+        let clientY = 0;
         
         if (evt.touches && evt.touches.length > 0) {
             clientX = evt.touches[0].clientX;
@@ -603,21 +608,24 @@
         };
     }
 
-    // --- HELPER UNIFICADOR DE INTERACCIONES DE GESTOS/MOUSE ---
+    // --- ENLAZADOR UNIFICADO DE EVENTOS ARRASTRE TÁCTIL / MOUSE (PROFILÁCTICO) ---
     function bindInteractEvents(canvas, downFn, moveFn, upFn) {
+        // Eventos Mouse estándar
         canvas.onmousedown = downFn;
+        canvas.onmousemove = moveFn;
+        canvas.onmouseup = upFn;
+
+        // Eventos Touch adaptativos con bloqueo preventivo de scroll accidental
         canvas.addEventListener('touchstart', function(e) {
             e.preventDefault();
             downFn(e);
         }, { passive: false });
 
-        canvas.onmousemove = moveFn;
         canvas.addEventListener('touchmove', function(e) {
             e.preventDefault();
             moveFn(e);
         }, { passive: false });
 
-        canvas.onmouseup = upFn;
         canvas.addEventListener('touchend', function(e) {
             e.preventDefault();
             if (upFn) upFn(e);
@@ -714,11 +722,7 @@
             }
         };
 
-        canvas.onmousemove = handleMove;
-        canvas.addEventListener('touchmove', function(e) { e.preventDefault(); handleMove(e); }, { passive: false });
-
-        canvas.onmousedown = handleClick;
-        canvas.addEventListener('touchstart', function(e) { e.preventDefault(); handleClick(e); }, { passive: false });
+        bindInteractEvents(canvas, handleClick, handleMove, null);
 
         function animate() {
             ctx.fillStyle = '#010106';
@@ -862,8 +866,9 @@
         const handleMove = function(e) {
             const pos = getMousePos(canvas, e);
             let hovering = false;
+            const clickTolerance = ('ontouchstart' in window) ? 35 : 15;
             s2Quarks.forEach(q => {
-                if (Math.hypot(q.x - pos.x, q.y - pos.y) < q.radius + 5) {
+                if (Math.hypot(q.x - pos.x, q.y - pos.y) < q.radius + clickTolerance) {
                     hovering = true;
                 }
             });
@@ -872,11 +877,12 @@
 
         const handleClick = function(e) {
             const pos = getMousePos(canvas, e);
+            const clickTolerance = ('ontouchstart' in window) ? 35 : 15;
             
             for (let i = s2Quarks.length - 1; i >= 0; i--) {
                 const q = s2Quarks[i];
                 const dist = Math.hypot(q.x - pos.x, q.y - pos.y);
-                if (dist < q.radius + 5) {
+                if (dist < q.radius + clickTolerance) {
                     playSound('confinement');
                     constructionSlot.push(q.type);
                     s2Quarks.splice(i, 1);
@@ -920,11 +926,7 @@
             }
         };
 
-        canvas.onmousemove = handleMove;
-        canvas.addEventListener('touchmove', function(e) { e.preventDefault(); handleMove(e); }, { passive: false });
-
-        canvas.onmousedown = handleClick;
-        canvas.addEventListener('touchstart', function(e) { e.preventDefault(); handleClick(e); }, { passive: false });
+        bindInteractEvents(canvas, handleClick, handleMove, null);
 
         function animate() {
             ctx.fillStyle = '#010108';
@@ -1021,10 +1023,11 @@
 
         const handleDown = function(e) {
             const pos = getMousePos(canvas, e);
+            const grabTolerance = ('ontouchstart' in window) ? 35 : 15;
             s3Particles.forEach(p => {
                 if (p.type === 'electron' && !p.bound) {
                     const dist = Math.hypot(p.x - pos.x, p.y - pos.y);
-                    if (dist < p.radius + 15) {
+                    if (dist < p.radius + grabTolerance) {
                         s3Selected = p;
                     }
                 }
@@ -1040,9 +1043,10 @@
                 s3Selected.y = pos.y;
                 hovering = true;
             } else {
+                const grabTolerance = ('ontouchstart' in window) ? 35 : 15;
                 s3Particles.forEach(p => {
                     if (p.type === 'electron' && !p.bound) {
-                        if (Math.hypot(p.x - pos.x, p.y - pos.y) < p.radius + 10) {
+                        if (Math.hypot(p.x - pos.x, p.y - pos.y) < p.radius + grabTolerance) {
                             hovering = true;
                         }
                     }
@@ -1053,10 +1057,11 @@
 
         const handleUp = function() {
             if (s3Selected) {
+                const dockingDistance = ('ontouchstart' in window) ? 60 : 40;
                 s3Particles.forEach(p => {
                     if (p.type === 'proton' && !p.bound) {
                         const dist = Math.hypot(p.x - s3Selected.x, p.y - s3Selected.y);
-                        if (dist < 40) {
+                        if (dist < dockingDistance) {
                             s3Selected.bound = true;
                             p.bound = true;
                             s3Selected.x = p.x;
@@ -1165,10 +1170,11 @@
         const handleDown = function(e) {
             if (s4Ignited) return; 
             const pos = getMousePos(canvas, e);
+            const grabTolerance = ('ontouchstart' in window) ? 35 : 18;
             s4Atoms.forEach(a => {
                 if (!a.fused) {
                     const dist = Math.hypot(a.x - pos.x, a.y - pos.y);
-                    if (dist < a.radius + 18) {
+                    if (dist < a.radius + grabTolerance) {
                         s4Selected = a;
                     }
                 }
@@ -1184,9 +1190,10 @@
                 s4Selected.y = pos.y;
                 hovering = true;
             } else {
+                const grabTolerance = ('ontouchstart' in window) ? 35 : 15;
                 s4Atoms.forEach(a => {
                     if (!a.fused && !s4Ignited) {
-                        if (Math.hypot(a.x - pos.x, a.y - pos.y) < a.radius + 15) {
+                        if (Math.hypot(a.x - pos.x, a.y - pos.y) < a.radius + grabTolerance) {
                             hovering = true;
                         }
                     }
@@ -1198,7 +1205,8 @@
         const handleUp = function() {
             if (s4Selected) {
                 const dist = Math.hypot(s4Selected.x - s4GravityWell.x, s4Selected.y - s4GravityWell.y);
-                if (dist < s4GravityWell.radius + 15) {
+                const captureRange = ('ontouchstart' in window) ? s4GravityWell.radius + 30 : s4GravityWell.radius + 15;
+                if (dist < captureRange) {
                     s4Selected.fused = true;
                     s4Selected.x = s4GravityWell.x + (Math.random() - 0.5) * 35;
                     s4Selected.y = s4GravityWell.y + (Math.random() - 0.5) * 35;
@@ -1349,11 +1357,7 @@
             }
         };
 
-        canvas.onmousemove = handleMove;
-        canvas.addEventListener('touchmove', function(e) { e.preventDefault(); handleMove(e); }, { passive: false });
-
-        canvas.onmousedown = handleClick;
-        canvas.addEventListener('touchstart', function(e) { e.preventDefault(); handleClick(e); }, { passive: false });
+        bindInteractEvents(canvas, handleClick, handleMove, null);
 
         function animate() {
             ctx.fillStyle = 'rgba(1, 1, 5, 0.15)';
@@ -1593,9 +1597,9 @@
 
         let miniStars = [];
         if (nodeIndex === 5 || nodeIndex === 6) {
-            for (let i = 0; i < 40; i++) {
+            for (let i = 0; i < 55; i++) {
                 const angle = Math.random() * Math.PI * 2;
-                const r = 10 + Math.random() * 50;
+                const r = 10 + Math.random() * 65;
                 miniStars.push({ 
                     radius: r, 
                     angle: angle, 
@@ -1608,14 +1612,20 @@
 
         function drawMini() {
             frame++;
-            mCtx.fillStyle = '#020208';
-            mCtx.fillRect(0, 0, mCanvas.width, mCanvas.height);
+            
+            // --- OPTIMIZACIÓN VISUAL DEL MINI-CANVAS CON MOTION BLUR TRAILS ---
+            // Solo limpiamos con fondo sólido para los hitos 1 al 5. El hito 6 usa su propio fondo semi-transparente
+            // para pintar estelas y colas de partículas increíbles.
+            if (nodeIndex !== 6) {
+                mCtx.fillStyle = '#020208';
+                mCtx.fillRect(0, 0, mCanvas.width, mCanvas.height);
+            }
 
             const cx = mCanvas.width / 2;
             const cy = mCanvas.height / 2;
 
             if (nodeIndex === 1) {
-                const pulse = (frame % 40) * 2;
+                const pulse = (frame % 45) * 2;
                 const g = mCtx.createRadialGradient(cx, cy, 1, cx, cy, pulse + 5);
                 g.addColorStop(0, '#fff');
                 g.addColorStop(0.5, '#ff00ff');
@@ -1625,7 +1635,7 @@
             } 
             else if (nodeIndex === 2) {
                 mCtx.beginPath();
-                mCtx.arc(cx, cy, 35, 0, Math.PI * 2);
+                mCtx.arc(cx, cy, 40, 0, Math.PI * 2);
                 mCtx.strokeStyle = 'rgba(59,59,227,0.5)';
                 mCtx.lineWidth = 2;
                 mCtx.stroke();
@@ -1634,29 +1644,29 @@
                 const labels = ['u', 'u', 'd'];
                 const colors = ['#ff6b6b', '#ff6b6b', '#51cf66'];
                 for(let i=0; i<3; i++) {
-                    const qx = cx + Math.cos(angles[i] + frame*0.015) * 18;
-                    const qy = cy + Math.sin(angles[i] + frame*0.015) * 18;
-                    mCtx.beginPath(); mCtx.arc(qx, qy, 8, 0, Math.PI * 2);
+                    const qx = cx + Math.cos(angles[i] + frame*0.015) * 22;
+                    const qy = cy + Math.sin(angles[i] + frame*0.015) * 22;
+                    mCtx.beginPath(); mCtx.arc(qx, qy, 9, 0, Math.PI * 2);
                     mCtx.fillStyle = colors[i]; mCtx.fill();
-                    mCtx.fillStyle = '#fff'; mCtx.font = 'bold 8px Orbitron';
-                    mCtx.fillText(labels[i], qx-3, qy+3);
+                    mCtx.fillStyle = '#fff'; mCtx.font = 'bold 10px Orbitron';
+                    mCtx.fillText(labels[i], qx-4, qy+3);
                 }
             } 
             else if (nodeIndex === 3) {
-                mCtx.beginPath(); mCtx.arc(cx, cy, 12, 0, Math.PI * 2);
+                mCtx.beginPath(); mCtx.arc(cx, cy, 14, 0, Math.PI * 2);
                 mCtx.fillStyle = '#ffcc00'; mCtx.fill(); 
 
-                mCtx.beginPath(); mCtx.arc(cx, cy, 32, 0, Math.PI * 2);
+                mCtx.beginPath(); mCtx.arc(cx, cy, 38, 0, Math.PI * 2);
                 mCtx.strokeStyle = 'rgba(0,255,255,0.2)';
                 mCtx.stroke();
 
-                const ex = cx + Math.cos(frame*0.04) * 32;
-                const ey = cy + Math.sin(frame*0.04) * 32;
-                mCtx.beginPath(); mCtx.arc(ex, ey, 5, 0, Math.PI * 2);
+                const ex = cx + Math.cos(frame*0.04) * 38;
+                const ey = cy + Math.sin(frame*0.04) * 38;
+                mCtx.beginPath(); mCtx.arc(ex, ey, 6, 0, Math.PI * 2);
                 mCtx.fillStyle = '#00ffff'; mCtx.fill();
             } 
             else if (nodeIndex === 4) {
-                const starSize = 25 + Math.sin(frame * 0.1) * 2;
+                const starSize = 28 + Math.sin(frame * 0.1) * 3;
                 const g = mCtx.createRadialGradient(cx, cy, 2, cx, cy, starSize);
                 g.addColorStop(0, '#fff');
                 g.addColorStop(0.4, '#ffa000');
@@ -1672,23 +1682,38 @@
                     s.angle += s.speed;
                     const x = cx + Math.cos(s.angle) * s.radius;
                     const y = cy + Math.sin(s.angle) * s.radius;
-                    mCtx.beginPath(); mCtx.arc(x, y, 1.5, 0, Math.PI * 2);
+                    mCtx.beginPath(); mCtx.arc(x, y, 1.8, 0, Math.PI * 2);
                     mCtx.fillStyle = s.color; mCtx.fill();
                 });
             } 
             else if (nodeIndex === 6) {
+                // --- DETALLE FLUIDO DE PARTÍCULAS EN LÍNEA DE TIEMPO ETAPA 6 (CON MEZCLA ADITIVA) ---
+                mCtx.fillStyle = 'rgba(2, 2, 8, 0.22)';
+                mCtx.fillRect(0, 0, mCanvas.width, mCanvas.height);
+
+                // Núcleo gravitacional colapsando para simular el Big Crunch en tiempo real
+                if (chosenDestiny === 'crunch') {
+                    const singularitySize = 2 + (frame % 30) * 0.4;
+                    const g = mCtx.createRadialGradient(cx, cy, 1, cx, cy, singularitySize + 5);
+                    g.addColorStop(0, '#fff');
+                    g.addColorStop(0.4, '#b7791f');
+                    g.addColorStop(1, 'transparent');
+                    mCtx.fillStyle = g;
+                    mCtx.beginPath(); mCtx.arc(cx, cy, singularitySize + 5, 0, Math.PI * 2); mCtx.fill();
+                }
+
                 miniStars.forEach(s => {
                     if (chosenDestiny === 'rip') {
-                        s.radius += 1.1; 
+                        s.radius += 1.4; 
                         s.color = '#f56565';
-                        if (s.radius > 65) {
+                        if (s.radius > 85) {
                             s.radius = 5 + Math.random() * 8;
                         }
                     } else if (chosenDestiny === 'crunch') {
-                        s.radius -= 0.7; 
-                        s.color = '#b7791f';
-                        if (s.radius < 2) {
-                            s.radius = 45 + Math.random() * 15;
+                        s.radius -= 0.9; 
+                        s.color = '#ffa000';
+                        if (s.radius < 3) {
+                            s.radius = 65 + Math.random() * 20;
                         }
                     } else { // freeze
                         s.speed *= 0.985; 
@@ -1702,7 +1727,7 @@
                     s.angle += s.speed; 
                     const x = cx + Math.cos(s.angle) * s.radius;
                     const y = cy + Math.sin(s.angle) * s.radius;
-                    mCtx.beginPath(); mCtx.arc(x, y, 1.5, 0, Math.PI * 2);
+                    mCtx.beginPath(); mCtx.arc(x, y, 2, 0, Math.PI * 2);
                     mCtx.fillStyle = s.color; 
                     mCtx.globalAlpha = s.opacity; 
                     mCtx.fill(); 
