@@ -15,7 +15,8 @@
     <header>
         <h1 id="stage-title">COSMOS ENGINE</h1>
         <div class="hud-controls">
-            <button class="btn-mode-switch" onclick="togglePlanetArchitectMode()">🪐 Taller de Planetas</button>
+            <button class="btn-mode-switch" style="border-color:#00ffff; color:#00ffff;" onclick="resetGame()">🏠 Menú</button>
+            <button class="btn-mode-switch" onclick="togglePlanetArchitectMode()">🪐 Planetas</button>
             <div class="hud-info" id="hud-status">ETAPA 1 / 6</div>
         </div>
     </header>
@@ -115,7 +116,7 @@
     <!-- TALLER DE PLANETAS (PLANET ARCHITECT) -->
     <div id="planet-screen" class="screen">
         <h2>🪐 Laboratorio: Taller de Planetas</h2>
-        <p class="instruction">Moldeá tu exoplaneta y presenciá su acreción por choque de asteroides. Tocá en el espacio para orbitar Lunas o romperlas en Anillos.</p>
+        <p class="instruction">Moldeá tu exoplaneta. Tocá en el espacio para agregar lunas. Usá los botones para colisionar asteroides o activar anillos.</p>
         
         <div class="planet-architect-grid">
             <div class="controls-panel">
@@ -130,7 +131,10 @@
                     <label>Tamaño / Masa <span id="p-size-val" style="color:#00ffff;">60</span></label>
                     <input type="range" id="planet-size" min="35" max="85" value="60" oninput="updatePlanetParams()">
                 </div>
-                <button class="btn-cosmic btn-sm" style="border-color:#ff00ff; color:#ff00ff;" onclick="triggerMoonDestructionAnimation()">💥 Destruir Luna en Anillos (Límite Roche)</button>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-type" id="btn-toggle-ring" style="flex:1;" onclick="toggleRingsManual()">Anillos: SI</button>
+                    <button class="btn-type" style="flex:1; border-color:#ff00ff; color:#ff00ff;" onclick="triggerMoonDestructionAnimation()">💥 Límite Roche</button>
+                </div>
             </div>
             <canvas id="planet-canvas" class="game-canvas" width="450" height="260"></canvas>
         </div>

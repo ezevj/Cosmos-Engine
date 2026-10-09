@@ -16,14 +16,11 @@ function getMousePos(canvas, evt) {
     const rect = canvas.getBoundingClientRect();
     let clientX = 0, clientY = 0;
     if (evt.touches && evt.touches.length > 0) {
-        clientX = evt.touches[0].clientX;
-        clientY = evt.touches[0].clientY;
+        clientX = evt.touches.clientX; clientY = evt.touches.clientY;
     } else if (evt.changedTouches && evt.changedTouches.length > 0) {
-        clientX = evt.changedTouches[0].clientX;
-        clientY = evt.changedTouches[0].clientY;
+        clientX = evt.changedTouches.clientX; clientY = evt.changedTouches.clientY;
     } else {
-        clientX = evt.clientX;
-        clientY = evt.clientY;
+        clientX = evt.clientX; clientY = evt.clientY;
     }
     return {
         x: (clientX - rect.left) * (canvas.width / (rect.width || 1)),
@@ -32,27 +29,22 @@ function getMousePos(canvas, evt) {
 }
 
 function bindInteractEvents(canvas, downFn, moveFn, upFn) {
-    canvas.onmousedown = downFn;
-    canvas.onmousemove = moveFn;
-    canvas.onmouseup = upFn;
+    canvas.onmousedown = downFn; canvas.onmousemove = moveFn; canvas.onmouseup = upFn;
     
     canvas.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-        if (downFn) downFn(e);
+        e.preventDefault(); if (downFn) downFn(e);
     }, { passive: false });
     
     canvas.addEventListener('touchmove', function(e) {
-        e.preventDefault();
-        if (moveFn) moveFn(e);
+        e.preventDefault(); if (moveFn) moveFn(e);
     }, { passive: false });
     
     canvas.addEventListener('touchend', function(e) {
-        e.preventDefault();
-        if (upFn) upFn(e);
+        e.preventDefault(); if (upFn) upFn(e);
     }, { passive: false });
 }
 
-// --- NAVEGACIÓN Y ESTADO DEL JUEGO ---
+// --- NAVEGACIÓN COMPLETA Y ESTADO DEL JUEGO ---
 let currentStage = 1;
 let chosenDestiny = 'freeze';
 
@@ -98,7 +90,7 @@ function resetGame() {
     document.getElementById('hud-status').innerText = "ETAPA 1 / 6";
 }
 
-// --- FASE 1: SINGULARIDAD Y COMPRESIÓN ---
+// --- FASE 1: SINGULARIDAD Y COMPRESIÓN (ANIMACIÓN ÉPICA DEL BIG BANG) ---
 let s1Clicks = 0, maxS1Clicks = 8, s1Shake = 0, s1Particles = [], isExpanding = false, explosionRadius = 0;
 
 function initStage1() {
@@ -116,23 +108,40 @@ function initStage1() {
         if (Math.hypot(pos.x - canvas.width / 2, pos.y - canvas.height / 2) < 120) {
             playSound('click');
             s1Clicks++;
-            s1Shake = s1Clicks * 3.5;
-            for (let i = 0; i < 15; i++) {
+            s1Shake = s1Clicks * 4.5;
+
+            // Inyección de partículas cuánticas
+            for (let i = 0; i < 20; i++) {
                 const angle = Math.random() * Math.PI * 2, r = 180 + Math.random() * 80;
                 s1Particles.push({
                     x: canvas.width / 2 + Math.cos(angle) * r,
                     y: canvas.height / 2 + Math.sin(angle) * r,
                     targetX: canvas.width / 2,
                     targetY: canvas.height / 2,
-                    speed: 0.08,
-                    size: Math.random() * 3 + 1,
-                    color: '#00ffff'
+                    speed: 0.09,
+                    size: Math.random() * 3 + 1.5,
+                    color: `hsl(${Math.random() * 360}, 100%, 75%)`
                 });
             }
+
             document.getElementById('temp-metric').innerHTML = `Temperatura: 10<sup>${(32 - s1Clicks * 2.5).toFixed(0)}</sup> K`;
+            document.getElementById('density-metric').innerText = `Densidad: ${100 + s1Clicks * 50}% Crítica`;
+
             if (s1Clicks >= maxS1Clicks) {
                 playSound('bigbang');
                 isExpanding = true;
+                // Preparar explosión inflacionaria
+                s1Particles = [];
+                for (let i = 0; i < 150; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    s1Particles.push({
+                        x: canvas.width / 2, y: canvas.height / 2,
+                        dx: Math.cos(angle) * (Math.random() * 12 + 4),
+                        dy: Math.sin(angle) * (Math.random() * 12 + 4),
+                        size: Math.random() * 3 + 1,
+                        color: `hsl(${Math.random() * 60 + 180}, 100%, 70%)`
+                    });
+                }
             }
         }
     };
@@ -141,23 +150,57 @@ function initStage1() {
     function animate() {
         ctx.fillStyle = '#010106'; ctx.fillRect(0, 0, canvas.width, canvas.height);
         const cx = canvas.width / 2, cy = canvas.height / 2;
+
+        ctx.save();
+        if (s1Shake > 0) {
+            ctx.translate((Math.random() - 0.5) * s1Shake, (Math.random() - 0.5) * s1Shake);
+            s1Shake *= 0.9;
+        }
+
         if (!isExpanding) {
+            // Cuadrícula de distorsión espacio-temporal
+            ctx.strokeStyle = `rgba(0, 255, 255, ${0.1 + s1Clicks * 0.08})`;
+            ctx.lineWidth = 1;
+            for (let r = 20; r < 200; r += 30) {
+                ctx.beginPath(); ctx.arc(cx, cy, Math.max(5, r - s1Clicks * 3), 0, Math.PI * 2); ctx.stroke();
+            }
+
+            // Núcleo de Singularidad
             const size = Math.max(8, 60 - s1Clicks * 6);
             const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, size);
-            grad.addColorStop(0, '#fff'); grad.addColorStop(0.5, '#ff00ff'); grad.addColorStop(1, 'transparent');
+            grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.4, '#ff00ff'); grad.addColorStop(1, 'transparent');
             ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(cx, cy, size, 0, Math.PI * 2); ctx.fill();
+
+            s1Particles.forEach(p => {
+                p.x += (p.targetX - p.x) * p.speed;
+                p.y += (p.targetY - p.y) * p.speed;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fillStyle = p.color; ctx.fill();
+            });
+
         } else {
-            explosionRadius += 14;
+            // ONDA DE CHOQUE INFLACIONARIA DEL BIG BANG
+            explosionRadius += 16;
             ctx.beginPath(); ctx.arc(cx, cy, explosionRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 4; ctx.stroke();
+            ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)'; ctx.lineWidth = 8; ctx.stroke();
+
+            ctx.beginPath(); ctx.arc(cx, cy, explosionRadius * 0.7, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255, 0, 255, 0.6)'; ctx.lineWidth = 4; ctx.stroke();
+
+            s1Particles.forEach(p => {
+                p.x += p.dx; p.y += p.dy;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fillStyle = p.color; ctx.fill();
+            });
         }
-        if (explosionRadius < canvas.width) safeRequestAnimationFrame(animate);
+
+        ctx.restore();
+
+        if (explosionRadius < canvas.width * 1.2) safeRequestAnimationFrame(animate);
         else { cancelActiveLoop(); showScreen('stage2-screen'); initStage2(); }
     }
     animate();
 }
 
-// --- FASE 2: QUARKS (PLASMA QGP) ---
+// --- FASE 2: QUARKS (PLASMA QGP CON REPOSICIÓN CONTINUA) ---
 let s2Quarks = [], s2Protons = 0, constructionSlot = [];
 
 function initStage2() {
@@ -170,12 +213,9 @@ function initStage2() {
     s2Quarks = [];
     for (let i = 0; i < 20; i++) {
         s2Quarks.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height,
-            type: Math.random() > 0.4 ? 'u' : 'd',
-            dx: (Math.random() - 0.5) * 4,
-            dy: (Math.random() - 0.5) * 4,
-            radius: 15
+            x: Math.random() * canvas.width, y: Math.random() * (canvas.height - 50) + 25,
+            type: Math.random() > 0.45 ? 'u' : 'd',
+            dx: (Math.random() - 0.5) * 4, dy: (Math.random() - 0.5) * 4, radius: 15
         });
     }
 
@@ -184,9 +224,16 @@ function initStage2() {
         for (let i = s2Quarks.length - 1; i >= 0; i--) {
             const q = s2Quarks[i];
             if (Math.hypot(q.x - pos.x, q.y - pos.y) < q.radius + 20) {
-                playSound('confinement');
-                constructionSlot.push(q.type);
-                s2Quarks.splice(i, 1);
+                playSound('confinement'); constructionSlot.push(q.type); s2Quarks.splice(i, 1);
+
+                if (s2Quarks.length < 15) {
+                    s2Quarks.push({
+                        x: Math.random() * canvas.width, y: Math.random() * (canvas.height - 50) + 25,
+                        type: Math.random() > 0.45 ? 'u' : 'd',
+                        dx: (Math.random() - 0.5) * 4, dy: (Math.random() - 0.5) * 4, radius: 15
+                    });
+                }
+
                 if (constructionSlot.length === 3) {
                     const countU = constructionSlot.filter(t => t === 'u').length;
                     const countD = constructionSlot.filter(t => t === 'd').length;
