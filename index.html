@@ -132,9 +132,10 @@
                     <input type="range" id="planet-size" min="35" max="85" value="60" oninput="updatePlanetParams()">
                 </div>
                 <div style="display:flex; gap:8px;">
-                    <button class="btn-type" id="btn-toggle-ring" style="flex:1;" onclick="toggleRingsManual()">Anillos: SI</button>
+                    <button class="btn-type" id="btn-toggle-ring" style="flex:1; background:rgba(0, 255, 255, 0.2); border-color:#00ffff;" onclick="toggleRingsManual()">💍 Anillos: SI</button>
                     <button class="btn-type" style="flex:1; border-color:#ff00ff; color:#ff00ff;" onclick="triggerMoonDestructionAnimation()">💥 Límite Roche</button>
                 </div>
+                <button class="btn-cosmic btn-sm" style="width:100%; margin-top:8px; border-color:#00ffff; color:#00ffff;" onclick="resetGame()">💥 Volver al Menú / Big Bang</button>
             </div>
             <canvas id="planet-canvas" class="game-canvas" width="450" height="260"></canvas>
         </div>
