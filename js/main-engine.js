@@ -90,7 +90,7 @@ function resetGame() {
     document.getElementById('hud-status').innerText = "ETAPA 1 / 6";
 }
 
-// --- FASE 1: SINGULARIDAD Y COMPRESIÓN (ANIMACIÓN ÉPICA DEL BIG BANG) ---
+// --- FASE 1: SINGULARIDAD Y COMPRESIÓN (BIG BANG ÉPICO) ---
 let s1Clicks = 0, maxS1Clicks = 8, s1Shake = 0, s1Particles = [], isExpanding = false, explosionRadius = 0;
 
 function initStage1() {
@@ -110,7 +110,6 @@ function initStage1() {
             s1Clicks++;
             s1Shake = s1Clicks * 4.5;
 
-            // Inyección de partículas cuánticas
             for (let i = 0; i < 20; i++) {
                 const angle = Math.random() * Math.PI * 2, r = 180 + Math.random() * 80;
                 s1Particles.push({
@@ -130,7 +129,6 @@ function initStage1() {
             if (s1Clicks >= maxS1Clicks) {
                 playSound('bigbang');
                 isExpanding = true;
-                // Preparar explosión inflacionaria
                 s1Particles = [];
                 for (let i = 0; i < 150; i++) {
                     const angle = Math.random() * Math.PI * 2;
@@ -158,14 +156,12 @@ function initStage1() {
         }
 
         if (!isExpanding) {
-            // Cuadrícula de distorsión espacio-temporal
             ctx.strokeStyle = `rgba(0, 255, 255, ${0.1 + s1Clicks * 0.08})`;
             ctx.lineWidth = 1;
             for (let r = 20; r < 200; r += 30) {
                 ctx.beginPath(); ctx.arc(cx, cy, Math.max(5, r - s1Clicks * 3), 0, Math.PI * 2); ctx.stroke();
             }
 
-            // Núcleo de Singularidad
             const size = Math.max(8, 60 - s1Clicks * 6);
             const grad = ctx.createRadialGradient(cx, cy, 2, cx, cy, size);
             grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.4, '#ff00ff'); grad.addColorStop(1, 'transparent');
@@ -178,7 +174,6 @@ function initStage1() {
             });
 
         } else {
-            // ONDA DE CHOQUE INFLACIONARIA DEL BIG BANG
             explosionRadius += 16;
             ctx.beginPath(); ctx.arc(cx, cy, explosionRadius, 0, Math.PI * 2);
             ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)'; ctx.lineWidth = 8; ctx.stroke();
@@ -271,7 +266,7 @@ function initStage2() {
     animate();
 }
 
-// --- FASE 3: RECOMBINACIÓN ---
+// --- FASE 3: RECOMBINACIÓN (ÁTOMOS DE HIDRÓGENO REALISTAS ¹H) ---
 let s3Particles = [], s3Atoms = 0, s3Selected = null;
 
 function initStage3() {
@@ -317,7 +312,9 @@ function initStage3() {
     };
     bindInteractEvents(canvas, handleDown, handleMove, handleUp);
 
+    let orbitAngle = 0;
     function animate() {
+        orbitAngle += 0.05;
         ctx.fillStyle = '#010106'; ctx.fillRect(0, 0, canvas.width, canvas.height);
         s3Particles.forEach(p => {
             if (p.type === 'electron' && !p.bound && p !== s3Selected) {
@@ -325,16 +322,46 @@ function initStage3() {
                 if (p.x < p.radius || p.x > canvas.width - p.radius) p.dx *= -1;
                 if (p.y < p.radius || p.y > canvas.height - p.radius) p.dy *= -1;
             }
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-            ctx.fillStyle = p.type === 'proton' ? (p.bound ? '#ffcc00' : '#ff4dfa') : '#00ffff'; ctx.fill();
+
+            if (p.type === 'proton') {
+                if (!p.bound) {
+                    const grad = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, p.radius + 6);
+                    grad.addColorStop(0, '#ff66cc'); grad.addColorStop(0.6, '#ff00aa'); grad.addColorStop(1, 'transparent');
+                    ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(p.x, p.y, p.radius + 6, 0, Math.PI * 2); ctx.fill();
+
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ff1a75'; ctx.fill();
+                    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 12px Orbitron'; ctx.fillText('p⁺', p.x - 7, p.y + 4);
+                } else {
+                    // ÁTOMO DE HIDRÓGENO COMPLETO (¹H)
+                    ctx.beginPath(); ctx.ellipse(p.x, p.y, 32, 18, 0.3, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(0, 255, 255, 0.4)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+                    ctx.beginPath(); ctx.arc(p.x, p.y, 14, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ff1a75'; ctx.fill();
+                    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px Orbitron'; ctx.fillText('p⁺', p.x - 6, p.y + 3);
+
+                    const ex = p.x + Math.cos(orbitAngle) * 32;
+                    const ey = p.y + Math.sin(orbitAngle) * 18;
+                    ctx.beginPath(); ctx.arc(ex, ey, 6, 0, Math.PI * 2);
+                    ctx.fillStyle = '#00ffff'; ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 10; ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            } else if (p.type === 'electron' && !p.bound) {
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#00ffff'; ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 8; ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = '#000000'; ctx.font = 'bold 10px Orbitron'; ctx.fillText('e⁻', p.x - 6, p.y + 3);
+            }
         });
+
         if (s3Atoms < 6) safeRequestAnimationFrame(animate);
         else { cancelActiveLoop(); showScreen('stage4-screen'); initStage4(); }
     }
     animate();
 }
 
-// --- FASE 4: FUSIÓN ESTELAR ---
+// --- FASE 4: FUSIÓN ESTELAR (SOL/ESTRELLA RESPLANDECIENTE CON NÚCLEO DE HELIO ⁴He) ---
 let s4Atoms = [], s4GravityWell = { x: 400, y: 150, radius: 75 }, s4FusedCount = 0, s4Ignited = false, s4Selected = null;
 
 function initStage4() {
@@ -347,7 +374,7 @@ function initStage4() {
     const ctx = canvas.getContext('2d');
     s4Atoms = [];
     for (let i = 0; i < 12; i++) {
-        s4Atoms.push({ x: 50 + Math.random() * 700, y: 50 + Math.random() * 200, radius: 14, fused: false, dx: (Math.random() - 0.5) * 3, dy: (Math.random() - 0.5) * 3 });
+        s4Atoms.push({ x: 50 + Math.random() * 700, y: 50 + Math.random() * 200, radius: 16, fused: false, dx: (Math.random() - 0.5) * 3, dy: (Math.random() - 0.5) * 3 });
     }
 
     const handleDown = function(e) {
@@ -381,25 +408,94 @@ function initStage4() {
     };
     bindInteractEvents(canvas, handleDown, handleMove, handleUp);
 
+    let sunTime = 0;
     function animate() {
+        sunTime += 0.03;
         ctx.fillStyle = '#010108'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.beginPath(); ctx.arc(s4GravityWell.x, s4GravityWell.y, s4GravityWell.radius, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)'; ctx.stroke();
+
+        const gx = s4GravityWell.x, gy = s4GravityWell.y;
+
+        if (!s4Ignited) {
+            // Pozo Gravitatorio en Calentamiento
+            ctx.beginPath(); ctx.arc(gx, gy, s4GravityWell.radius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(255, ${Math.min(255, s4FusedCount * 40)}, 0, 0.5)`; ctx.lineWidth = 3; ctx.stroke();
+
+            ctx.fillStyle = '#ffaa00'; ctx.font = '12px Orbitron'; ctx.textAlign = 'center';
+            ctx.fillText(`${(s4FusedCount * 2.5).toFixed(1)}M K`, gx, gy + 4);
+            ctx.textAlign = 'left';
+        } else {
+            // ☀️ SOL / ESTRELLA RESPLANDECIENTE (ANIMACIÓN DE FUSIÓN ACTIVA)
+            
+            // 1. Corona Solar (Resplandor térmico exterior)
+            const coronaG = ctx.createRadialGradient(gx, gy, 20, gx, gy, 140);
+            coronaG.addColorStop(0, 'rgba(255, 230, 100, 0.9)');
+            coronaG.addColorStop(0.3, 'rgba(255, 120, 0, 0.5)');
+            coronaG.addColorStop(0.7, 'rgba(255, 50, 0, 0.2)');
+            coronaG.addColorStop(1, 'transparent');
+            ctx.fillStyle = coronaG; ctx.beginPath(); ctx.arc(gx, gy, 140, 0, Math.PI * 2); ctx.fill();
+
+            // 2. Llamaradas y Prominencias Solares (Erupciones)
+            ctx.strokeStyle = '#ff3300'; ctx.lineWidth = 3;
+            for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+                const flareR = 65 + Math.sin(sunTime * 3 + a) * 12;
+                const fx = gx + Math.cos(a + sunTime * 0.5) * flareR;
+                const fy = gy + Math.sin(a + sunTime * 0.5) * flareR;
+                ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(fx, fy); ctx.stroke();
+            }
+
+            // 3. Fotosfera brillante
+            const sunG = ctx.createRadialGradient(gx - 10, gy - 10, 5, gx, gy, 60);
+            sunG.addColorStop(0, '#ffffff'); sunG.addColorStop(0.4, '#fff066');
+            sunG.addColorStop(0.8, '#ff6600'); sunG.addColorStop(1, '#cc1100');
+            ctx.fillStyle = sunG; ctx.beginPath(); ctx.arc(gx, gy, 60, 0, Math.PI * 2); ctx.fill();
+
+            // 4. Etiqueta del Núcleo
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 12px Orbitron'; ctx.textAlign = 'center';
+            ctx.fillText('SOL (⁴He)', gx, gy + 85);
+            ctx.textAlign = 'left';
+        }
+
+        // DIBUJO DE ÁTOMOS (HIDRÓGENO Y HELIO SINTETIZADO)
         s4Atoms.forEach(a => {
             if (!a.fused && a !== s4Selected) {
                 a.x += a.dx; a.y += a.dy;
-                if (a.x < 10 || a.x > canvas.width - 10) a.dx *= -1;
-                if (a.y < 10 || a.y > canvas.height - 10) a.dy *= -1;
+                if (a.x < 15 || a.x > canvas.width - 15) a.dx *= -1;
+                if (a.y < 15 || a.y > canvas.height - 15) a.dy *= -1;
             }
-            ctx.beginPath(); ctx.arc(a.x, a.y, a.radius, 0, Math.PI * 2);
-            ctx.fillStyle = a.fused ? '#ff5c00' : '#ffcc00'; ctx.fill();
+
+            if (!a.fused) {
+                // Átomo de Hidrógeno libre (¹H)
+                ctx.beginPath(); ctx.ellipse(a.x, a.y, 16, 9, 0.2, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(0, 255, 255, 0.4)'; ctx.lineWidth = 1; ctx.stroke();
+                
+                ctx.beginPath(); ctx.arc(a.x, a.y, 8, 0, Math.PI * 2);
+                ctx.fillStyle = '#ff1a75'; ctx.fill();
+                
+                const ex = a.x + Math.cos(sunTime * 3) * 16;
+                const ey = a.y + Math.sin(sunTime * 3) * 9;
+                ctx.beginPath(); ctx.arc(ex, ey, 3.5, 0, Math.PI * 2);
+                ctx.fillStyle = '#00ffff'; ctx.fill();
+            } else if (!s4Ignited) {
+                // ÁTOMO DE HELIO-4 SINTETIZADO (⁴He): 2 Protones + 2 Neutrones + 2 Electrones
+                const hx = a.x, hy = a.y;
+                // Protones
+                ctx.beginPath(); ctx.arc(hx - 4, hy - 4, 5, 0, Math.PI * 2); ctx.fillStyle = '#ff1a75'; ctx.fill();
+                ctx.beginPath(); ctx.arc(hx + 4, hy + 4, 5, 0, Math.PI * 2); ctx.fillStyle = '#ff1a75'; ctx.fill();
+                // Neutrones
+                ctx.beginPath(); ctx.arc(hx + 4, hy - 4, 5, 0, Math.PI * 2); ctx.fillStyle = '#8888aa'; ctx.fill();
+                ctx.beginPath(); ctx.arc(hx - 4, hy + 4, 5, 0, Math.PI * 2); ctx.fillStyle = '#8888aa'; ctx.fill();
+                // 2 Electrones en órbitas
+                ctx.beginPath(); ctx.ellipse(hx, hy, 18, 10, 0.4, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(255, 204, 0, 0.5)'; ctx.lineWidth = 1; ctx.stroke();
+            }
         });
+
         safeRequestAnimationFrame(animate);
     }
     animate();
 }
 
-// --- FASE 5: GALAXIAS ---
+// --- FASE 5: GALAXIA (AGUJERO NEGRO SUPERMASIVO SAGITARIO A* / M87) ---
 let s5Stars = [], s5Complete = false;
 
 function initStage5() {
@@ -416,30 +512,64 @@ function initStage5() {
         const pos = getMousePos(canvas, e);
         const cx = canvas.width / 2, cy = canvas.height / 2;
         const dist = Math.hypot(pos.x - cx, pos.y - cy);
-        s5Stars.push({
-            radius: dist,
-            angle: Math.atan2(pos.y - cy, pos.x - cx),
-            speed: (0.15 / Math.sqrt(dist)) * 3,
-            size: Math.random() * 3 + 1
-        });
-        playSound('click');
-        document.getElementById('galaxy-stars').innerText = `Sistemas en Órbita: ${s5Stars.length} / 40`;
-        if (s5Stars.length >= 40) {
-            s5Complete = true; playSound('success');
-            document.getElementById('galaxy-next-btn').style.display = 'inline-block';
+        if (dist > 35) {
+            s5Stars.push({
+                radius: dist,
+                angle: Math.atan2(pos.y - cy, pos.x - cx),
+                speed: (0.18 / Math.sqrt(dist)) * 3,
+                size: Math.random() * 3 + 1
+            });
+            playSound('click');
+            document.getElementById('galaxy-stars').innerText = `Sistemas en Órbita: ${s5Stars.length} / 40`;
+            if (s5Stars.length >= 40) {
+                s5Complete = true; playSound('success');
+                document.getElementById('galaxy-next-btn').style.display = 'inline-block';
+            }
         }
     };
     bindInteractEvents(canvas, handleClick, null, null);
 
+    let bhTime = 0;
     function animate() {
-        ctx.fillStyle = 'rgba(1, 1, 5, 0.2)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        bhTime += 0.04;
+        ctx.fillStyle = 'rgba(1, 1, 5, 0.25)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
         const cx = canvas.width / 2, cy = canvas.height / 2;
+
+        // 🕳️ AGUJERO NEGRO SUPERMASIVO (SAGITARIO A* CON DISCO DE ACRECIÓN Y CHORROS RELATIVISTAS)
+        
+        // 1. Chorros Relativistas (Jets verticales de plasma)
+        const jetG = ctx.createLinearGradient(cx, cy - 120, cx, cy + 120);
+        jetG.addColorStop(0, 'rgba(0, 255, 255, 0.8)'); jetG.addColorStop(0.4, 'transparent');
+        jetG.addColorStop(0.6, 'transparent'); jetG.addColorStop(1, 'rgba(0, 255, 255, 0.8)');
+        ctx.fillStyle = jetG; ctx.fillRect(cx - 3, cy - 120, 6, 240);
+
+        // 2. Disco de Acreción Inclinado (Lente Gravitatoria e Incandescencia)
+        ctx.save(); ctx.translate(cx, cy); ctx.scale(1, 0.38); ctx.rotate(0.2);
+        const accG = ctx.createRadialGradient(0, 0, 20, 0, 0, 75);
+        accG.addColorStop(0, '#ffffff'); accG.addColorStop(0.2, '#ffaa00');
+        accG.addColorStop(0.6, '#ff3300'); accG.addColorStop(1, 'transparent');
+        ctx.fillStyle = accG; ctx.beginPath(); ctx.arc(0, 0, 75, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+
+        // 3. Horizonte de Sucesos (Esfera Negra Absoluta)
+        ctx.beginPath(); ctx.arc(cx, cy, 22, 0, Math.PI * 2);
+        ctx.fillStyle = '#000000'; ctx.fill();
+
+        // 4. Anillo Fotónico Lente Gravitacional (Borde Brillante)
+        ctx.beginPath(); ctx.arc(cx, cy, 23.5, 0, Math.PI * 2);
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#00ffff'; ctx.shadowBlur = 15; ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // SISTEMAS SOLARES EN ÓRBITA
         s5Stars.forEach(s => {
             s.angle += s.speed;
-            ctx.beginPath();
-            ctx.arc(cx + Math.cos(s.angle) * s.radius, cy + Math.sin(s.angle) * s.radius, s.size, 0, Math.PI * 2);
+            const sx = cx + Math.cos(s.angle) * s.radius;
+            const sy = cy + Math.sin(s.angle) * s.radius;
+            ctx.beginPath(); ctx.arc(sx, sy, s.size, 0, Math.PI * 2);
             ctx.fillStyle = '#00ffff'; ctx.fill();
         });
+
         safeRequestAnimationFrame(animate);
     }
     animate();
